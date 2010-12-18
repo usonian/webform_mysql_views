@@ -1,0 +1,82 @@
+<?php //$Id$
+
+/**
+ * @file
+ * The Webform MySQL Views module allows you to automatically build flattened
+ * MySQL views of submitted Webform module data, for convenient use by external
+ * applications.
+ */
+
+/**
+ * Implementation of hook_form_alter();
+ */
+function webform_mysql_views_form_alter(&$form, &$form_state, $form_id) {
+  //Add the "Build MySQL view for result data from this form" checkbox
+  if ($form_id == 'webform_node_form') {
+//    dsm($form)
+    $form['webform_mysql_views'] = array(
+      '#type' => 'fieldset',
+      '#title' => 'Webform MySQL Views',
+      '#collapsible' => TRUE,
+    );
+    $form['webform_mysql_views']['build_mysql_view'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Build a MySQL view for result data from this Webform')
+    );
+    $form['webform_mysql_views']['mysql_view_name'] = array(
+      '#type' => 'textfield',
+      '#size' => 20,
+      '#title' => t('View Name'),
+      '#description' => t('E.G. webform_view_mywebformname'),
+    );
+    $form['#submit'][] = array('webform_mysql_views_node_submit' => array());
+  }
+
+}
+
+/**
+ * Implementation of hook_nodeapi().
+ */
+function webform_mysql_views_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
+  if ($node->type == 'webform') {
+    switch ($op) {
+      case 'insert':
+      case 'update':
+        $views = variable_get('webform_mysql_views_views', array());
+
+        if ($node->build_mysql_view) {
+          // Add/update the view variable.  If 'mysql_view_name is different,
+          // drop and rebuild the view.
+        }
+        else {
+          // Check for existing entry and unset if necessary
+        }
+
+        variable_set('webform_mysql_views_views');
+
+        break;
+      case 'delete':
+        //Drop the view
+
+    }
+  }
+}
+
+/**
+ * Given a webform node ID, build an SQL query that will create a flat MySQL view
+ * of subnissions for that webform
+ */
+function webform_mysql_views_build_query($nid, $view_name) {
+  $query = db_result(
+    db_query("SELECT CONCAT(
+      \"CREATE OR REPLACE VIEW %s AS SELECT parent.sid, webform_submissions.uid, \",
+      GROUP_CONCAT(
+        CONCAT(\"(SELECT data FROM webform_submitted_data AS child WHERE child.sid = parent.sid AND cid = \", c.cid, \") AS \", c.form_key)
+      ),
+      \", FROM_UNIXTIME(webform_submissions.submitted) AS submitted, webform_submissions.remote_addr FROM webform_submitted_data AS parent JOIN webform_submissions ON webform_submissions.sid = parent.sid WHERE parent.nid = %d GROUP BY parent.sid ORDER BY parent.sid DESC;\"
+    ) AS query
+    FROM webform_component c
+    WHERE c.nid = %d", $view_name, $nid, $nid)
+  );
+  return $query;
+}

@@ -1,0 +1,6 @@
+;$Id
+name = Webform MySQL Views
+description = Create flattened MySQL views from Webform module data
+package = Webform
+core = 6.x
+dependencies[] = webform
