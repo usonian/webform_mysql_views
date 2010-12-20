@@ -44,12 +44,19 @@ function webform_mysql_views_menu() {
 /**
  * Implementation of hook_help().
  */
-//function webform_mysql_views_help($path) {
-//  switch($path) {
-//    case 'admin/content/webform/mysql':
-//
-//  }
-//}
+function webform_mysql_views_help($path) {
+  switch($path) {
+    case 'admin/help#webform_mysql_views':
+      return '<p>' .t("This module builds flattened, read-only MySQL views of webform submission data. These views may be useful when you need to  access this data from an external application in an automated fashion without exporting, importing, or the use of a web-based API."). "</p><p>"
+      .t("To manage MySQL views for your webforms, log in as an administrator and go to the <code>Administer &gt; Content Management &gt; Web Forms</code> page and click on the <code>MySQL Views</code> tab."). '</p><p>'
+      .t("<h3 id=\"requirements\">Requirements</h3><ul><li>Your Drupal database must be using the MySQL backend.</li><li>Your MySQL server must be version 5.0 or later</li><li>The MySQL user specified in your Drupal <code>settings.php</code> file must have permission to create views.</li><li>Webform Module</li><li>Elements Module</li></ul>");
+    case 'admin/content/webform/mysql':
+      return '<p>' .t("This page lets you add or remove MySQL views containing submission data for your Webforms."). '</p>'
+. '<p>' .t("To add a MySQL view for a Webform, check the box next to its name and submit the form"). '</p>'
+. '<p>' .t("To remove a MySQL view for a Webform, uncheck the box next to its name and submit the form."). '</p>'
+. '<p>' .t("Note: <a href=\"http://dev.mysql.com/tech-resources/articles/mysql-views.html\">MySQL Views</a> should not be confused with the <a href=\"http://drupal.org/project/views\"> Drupal Views module</a>.").'</p>';
+  }
+}
 
 /**
  * Page callback for admin/content/webform/mysql.
