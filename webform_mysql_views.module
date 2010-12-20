@@ -5,6 +5,8 @@
  * The Webform MySQL Views module allows you to automatically build flattened
  * MySQL views of submitted Webform module data, for convenient use by external
  * applications.
+ *
+ * @author Andy Chase <andychase@gmail.com>
  */
 
 /**
@@ -66,10 +68,10 @@ function webform_mysql_views_help($path) {
  */
 function webform_mysql_views_admin_form() {
   // Get list of webform-enabled content types
-  $types = webform_variable_get('webform_node_types');
+  $types = webform_variable_get('webform_node_types', array());
 
   //Get list of nids that already have views
-  $views = variable_get('webform_mysql_views_views');
+  $views = variable_get('webform_mysql_views_views', array());
   $view_nids = array_keys($views);
 
   //Get list of all webform nodes
@@ -109,6 +111,8 @@ function webform_mysql_views_admin_form() {
   $form['help'] = array(
     '#value' => t("Select the webform(s) you would like to generate MySQL views for.")
   );
+
+  //TODO: Display 'No webforms defined' error instead of tableselect if $options is empty.
   $form['nodes'] = array(
     '#type' => 'tableselect',
     '#header' => $header,
