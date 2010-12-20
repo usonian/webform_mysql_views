@@ -6,6 +6,10 @@
  * MySQL views of submitted Webform module data, for convenient use by external
  * applications.
  *
+ * TODO: Add hook_nodeapi and implement a delete op to drop deleted node view
+ * TODO: Alter the webform component form and add a submit handler to rebuild views
+ * TODO: Rebuild view a component gets deleted.
+ *
  * @author Andy Chase <andychase@gmail.com>
  */
 
@@ -67,6 +71,17 @@ function webform_mysql_views_help($path) {
  * form because of chicken-and-egg logic hassles.
  */
 function webform_mysql_views_admin_form() {
+
+
+  $meets_reqs = _webform_mysql_views_check_requirements();
+  if ($meets_reqs !== TRUE) {
+    $output = '<strong>' .t("This module will not work on this site."). '</strong>';
+    $output .= theme('item_list', $meets_reqs, t('Details'));
+
+    return array("error" => array('#value' => $output));
+  }
+
+
   // Get list of webform-enabled content types
   $types = webform_variable_get('webform_node_types', array());
 
@@ -221,4 +236,40 @@ function webform_mysql_views_get_view_name($title, $nid) {
   }
 
   return $title;
+}
+
+/**
+ * Check Drupal environment for module requirements
+ */
+function _webform_mysql_views_check_requirements() {
+
+  global $db_url;
+
+  $meets_reqs = variable_set('webform_mysql_views_meets_reqs', FALSE);
+
+  if ($meets_reqs) {
+    return TRUE;
+  }
+  else {
+    $errors = array();
+    //Make sure site is using MySQL backend
+    if (substr($db_url, 0, 5) != 'mysql') {
+      $errors[] = t("This module is only compatible with the MySQL backend.");
+    }
+
+    //Make sure server major version is 5
+    $version = db_result(db_query("SELECT version() AS version"));
+    if ((int)substr($version, 0, 1) < 5) {
+      $errors[] = t("This module requires MySQL server version 5.0 or later.  Your server is running version @version.", array('@version' => $version));
+    }
+
+    if (count($errors) == 0) {
+      variable_set('webform_mysql_views_meets_reqs', TRUE);
+      return TRUE;
+    }
+    else {
+      return $errors;
+    }
+  }
+
 }
