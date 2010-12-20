@@ -43,6 +43,16 @@ function webform_mysql_views_menu() {
 }
 
 /**
+ * Implementation of hook_help().
+ */
+//function webform_mysql_views_help($path) {
+//  switch($path) {
+//    case 'admin/content/webform/mysql':
+//
+//  }
+//}
+
+/**
  * Given a webform node ID, build an SQL query that will create a flat MySQL view
  * of subnissions for that webform
  */
@@ -59,4 +69,25 @@ function webform_mysql_views_build_query($nid, $view_name) {
     WHERE c.nid = %d", $view_name, $nid, $nid)
   );
   return $query;
+}
+
+/**
+ * Get a unique view name from a given string and node ID.
+ */
+function webform_mysql_views_get_view_name($title, $nid) {
+  //Discard non-alphanumeric chars
+  $title = strtolower(str_replace(' ', '_', $title));
+  $title = 'webform_views_' .preg_replace('/[^a-z0-9_]/', '', $title);
+
+  /* Check whether the default view name is already being used
+   * (For example duplicate node titles). Append $nid if necessary to ensure
+   * uniqueness
+   */
+  $view_exists = db_result(db_query("SELECT COUNT(table_name) AS view_exists FROM information_schema.tables where table_schema = 'drupal6_rcapp_dev' AND table_name = '%s'", $title));
+
+  if ($view_exists) {
+    return $title. '_' .$nid;
+  }
+
+  return $title;
 }
