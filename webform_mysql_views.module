@@ -6,9 +6,11 @@
  * MySQL views of submitted Webform module data, for convenient use by external
  * applications.
  *
- * TODO: Add hook_nodeapi and implement a delete op to drop deleted node view
  * TODO: Alter the webform component form and add a submit handler to rebuild views
  * TODO: Rebuild view a component gets deleted.
+ * TODO: Refactor the build_query function so it doesn't rely on group_concat;
+ *       server default is 1024 characters, query gets truncated if there are
+ *       more than a couple of fields.
  *
  * @author Andy Chase <andychase@gmail.com>
  */
@@ -48,6 +50,25 @@ function webform_mysql_views_menu() {
 }
 
 /**
+ * Implementation of hook_form_alter().
+ */
+function webform_mysql_views_form_alter(&$form, &$form_state, $form_id) {
+  switch ($form_id) {
+    case 'webform_component_edit_form':
+    case 'webform_component_delete_form':
+      $form['#submit'][] = 'webform_mysql_views_component_submit';
+  }
+}
+
+/**
+ * Submit handler for the webform component edit/delete form.
+ */
+function webform_mysql_views_component_submit($form, $form_state) {
+  //If this node has a MySQL view, update it.
+  webform_mysql_views_rebuild($form_state['values']['nid']);
+}
+
+/**
  * Implementation of hook_nodeapi().
  */
 function webform_mysql_views_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
@@ -56,12 +77,47 @@ function webform_mysql_views_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
    * and if so, drop it.
    */
   if ($op == 'delete') {
-    $views = variable_get('webform_mysql_views_views', array());
-    if (!empty($views[$node->nid])) {
-      db_query("DROP VIEW {%s}", $views[$node->nid]);
-      unset($views[$node->nid]);
-      variable_set('webform_mysql_views_views', $views);
-    }
+    webform_mysql_views_drop($node->nid);
+  }
+}
+
+/**
+ * Rebuild the view for the specified nid, if any. If $add_new is TRUE, will
+ * build a new view even if an existing one is not found.
+ */
+function webform_mysql_views_rebuild($nid, $add_new = FALSE) {
+  $views = variable_get('webform_mysql_views_views', array());
+  $name = NULL;
+
+  if (empty($views[$nid]) && $add_new) {
+    //Get a name for the new view
+    $node = node_load($nid);
+    $name = webform_mysql_views_get_view_name($node->title, $nid);
+    $views[$nid] = $name;
+    variable_set('webform_mysql_views_views', $views);
+  }
+
+  if ($views[$nid]) {
+    $query = webform_mysql_views_build_query($nid, $views[$nid]);
+    drupal_set_message($query);
+    db_query($query);
+  }
+
+  //If $add_new was TRUE, return the name of the newly created view.
+  if ($name) {
+    return $name;
+  }
+}
+
+/**
+ * Drops the view belonging to the specified nid, if any
+ */
+function webform_mysql_views_drop($nid) {
+  $views = variable_get('webform_mysql_views_views', array());
+  if (!empty($views[$nid])) {
+    db_query("DROP VIEW {%s}", $views[$nid]);
+    unset($views[$nid]);
+    variable_set('webform_mysql_views_views', $views);
   }
 }
 
@@ -195,11 +251,7 @@ function webform_mysql_views_admin_form_submit($form, &$form_state) {
   $new_nids = array_diff($submitted_nids, $webform_view_nids);
 
   foreach ($new_nids as $nid) {
-    $view_name = webform_mysql_views_get_view_name($form_state['values']['titles'][$nid], $nid);
-    $query = webform_mysql_views_build_query($nid, $view_name);
-    db_query($query);
-
-    $webform_views[$nid] = $view_name;
+    $webform_views[$nid] = webform_mysql_views_rebuild($nid, TRUE);;
   }
 
   if (count($new_nids)) {
@@ -223,7 +275,7 @@ function webform_mysql_views_admin_form_submit($form, &$form_state) {
 function webform_mysql_views_build_query($nid, $view_name) {
   $query = db_result(
     db_query("SELECT CONCAT(
-      \"CREATE OR REPLACE VIEW %s AS SELECT parent.sid, webform_submissions.uid, \",
+      \"CREATE OR REPLACE VIEW {%s AS SELECT parent.sid, webform_submissions.uid, \",
       GROUP_CONCAT(
         CONCAT(\"(SELECT data FROM webform_submitted_data AS child WHERE child.sid = parent.sid AND cid = \", c.cid, \") AS \", c.form_key)
       ),
