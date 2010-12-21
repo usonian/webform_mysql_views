@@ -48,6 +48,24 @@ function webform_mysql_views_menu() {
 }
 
 /**
+ * Implementation of hook_nodeapi().
+ */
+function webform_mysql_views_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
+  /*
+   * If node is being deleted, check to see if it has a corresponding MySQL view
+   * and if so, drop it.
+   */
+  if ($op == 'delete') {
+    $views = variable_get('webform_mysql_views_views', array());
+    if (!empty($views[$node->nid])) {
+      db_query("DROP VIEW {%s}", $views[$node->nid]);
+      unset($views[$node->nid]);
+      variable_set('webform_mysql_views_views', $views);
+    }
+  }
+}
+
+/**
  * Implementation of hook_help().
  */
 function webform_mysql_views_help($path) {
