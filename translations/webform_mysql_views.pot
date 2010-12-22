@@ -10,7 +10,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
-"POT-Creation-Date: 2010-12-20 15:52-0500\n"
+"POT-Creation-Date: 2010-12-22 11:30-0500\n"
 "PO-Revision-Date: YYYY-mm-DD HH:MM+ZZZZ\n"
 "Last-Translator: NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <EMAIL@ADDRESS>\n"
@@ -19,79 +19,95 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 
-#: webform_mysql_views.module:50
+#: webform_mysql_views.module:134
 msgid "This module builds flattened, read-only MySQL views of webform submission data. These views may be useful when you need to  access this data from an external application in an automated fashion without exporting, importing, or the use of a web-based API."
 msgstr ""
 
-#: webform_mysql_views.module:51
+#: webform_mysql_views.module:135
 msgid "To manage MySQL views for your webforms, log in as an administrator and go to the <code>Administer &gt; Content Management &gt; Web Forms</code> page and click on the <code>MySQL Views</code> tab."
 msgstr ""
 
-#: webform_mysql_views.module:52
+#: webform_mysql_views.module:136
 msgid "<h3 id=\"requirements\">Requirements</h3><ul><li>Your Drupal database must be using the MySQL backend.</li><li>Your MySQL server must be version 5.0 or later</li><li>The MySQL user specified in your Drupal <code>settings.php</code> file must have permission to create views.</li><li>Webform Module</li><li>Elements Module</li></ul>"
 msgstr ""
 
-#: webform_mysql_views.module:54
+#: webform_mysql_views.module:138
 msgid "This page lets you add or remove MySQL views containing submission data for your Webforms."
 msgstr ""
 
-#: webform_mysql_views.module:55
+#: webform_mysql_views.module:139
 msgid "To add a MySQL view for a Webform, check the box next to its name and submit the form"
 msgstr ""
 
-#: webform_mysql_views.module:56
+#: webform_mysql_views.module:140
 msgid "To remove a MySQL view for a Webform, uncheck the box next to its name and submit the form."
 msgstr ""
 
-#: webform_mysql_views.module:57
+#: webform_mysql_views.module:141
 msgid "Note: <a href=\"http://dev.mysql.com/tech-resources/articles/mysql-views.html\">MySQL Views</a> should not be confused with the <a href=\"http://drupal.org/project/views\"> Drupal Views module</a>."
 msgstr ""
 
-#: webform_mysql_views.module:92
+#: webform_mysql_views.module:156
+msgid "This module will not work on this site."
+msgstr ""
+
+#: webform_mysql_views.module:157
+msgid "Details"
+msgstr ""
+
+#: webform_mysql_views.module:187
 msgid "-"
 msgstr ""
 
-#: webform_mysql_views.module:106
+#: webform_mysql_views.module:201
 msgid "Webform Name"
 msgstr ""
 
-#: webform_mysql_views.module:107
+#: webform_mysql_views.module:202
 msgid "View Name"
 msgstr ""
 
-#: webform_mysql_views.module:110
+#: webform_mysql_views.module:205
 msgid "Select the webform(s) you would like to generate MySQL views for."
 msgstr ""
 
-#: webform_mysql_views.module:120
+#: webform_mysql_views.module:217
 msgid "Submit"
 msgstr ""
 
-#: webform_mysql_views.module:151
+#: webform_mysql_views.module:340
+msgid "This module is only compatible with the MySQL backend."
+msgstr ""
+
+#: webform_mysql_views.module:346
+msgid "This module requires MySQL server version 5.0 or later.  Your server is running version @version."
+msgstr ""
+
+#: webform_mysql_views.module:249
 msgid "Dropped 1 view."
 msgid_plural "Dropped @count views."
 msgstr[0] ""
 msgstr[1] ""
 
-#: webform_mysql_views.module:170
+#: webform_mysql_views.module:264
 msgid "Created 1 view."
 msgid_plural "Created @count views."
 msgstr[0] ""
 msgstr[1] ""
 
-#: webform_mysql_views.module:18
+#: webform_mysql_views.module:21
 msgid "Webforms"
 msgstr ""
 
-#: webform_mysql_views.module:22
+#: webform_mysql_views.module:25
 msgid "View and edit all the available webforms on your site."
 msgstr ""
 
-#: webform_mysql_views.module:31
+#: webform_mysql_views.module:34
 msgid "MySQL Views"
 msgstr ""
 
-#: webform_mysql_views.module:36
+#: webform_mysql_views.module:39
 msgid "Create MySQL views of submitted Webform data."
 msgstr ""
 
