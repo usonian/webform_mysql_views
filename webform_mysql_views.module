@@ -6,9 +6,6 @@
  * MySQL views of submitted Webform module data, for convenient use by external
  * applications.
  *
- * TODO: Refactor the build_query function so it doesn't rely on group_concat;
- *       server default is 1024 characters, query gets truncated if there are
- *       more than a couple of fields.
  *
  * @author Andy Chase <andychase@gmail.com>
  */
@@ -248,7 +245,8 @@ function webform_mysql_views_admin_form_submit($form, &$form_state) {
     unset($webform_views[$nid]);
   }
   if (count($drop_nids)) {
-    drupal_set_message(format_plural(count($drop_nids),
+    drupal_set_message(
+      format_plural(count($drop_nids),
       'Dropped 1 view.',
       'Dropped @count views.',
       array('@count' => count($drop_nids))));
@@ -280,19 +278,26 @@ function webform_mysql_views_admin_form_submit($form, &$form_state) {
  * of subnissions for that webform
  */
 function webform_mysql_views_build_query($nid, $view_name) {
-  $query = db_result(
-    db_query("SELECT CONCAT(
-      \"CREATE OR REPLACE VIEW {%s} AS SELECT parent.sid, webform_submissions.uid, \",
-      GROUP_CONCAT(
-        CONCAT(\"(SELECT data FROM webform_submitted_data AS child WHERE child.sid = parent.sid AND cid = \", c.cid, \") AS \", c.form_key)
-        ORDER BY c.weight ASC, c.cid ASC
-      ),
-      \", FROM_UNIXTIME(webform_submissions.submitted) AS submitted, webform_submissions.remote_addr FROM webform_submitted_data AS parent JOIN webform_submissions ON webform_submissions.sid = parent.sid WHERE parent.nid = %d GROUP BY parent.sid ORDER BY parent.sid DESC;\"
-    ) AS query
-    FROM webform_component c
-    WHERE c.nid = %d", $view_name, $nid, $nid)
-  );
-  return $query;
+
+  /* Build query with individual rows instead of GROUP_CONCAT, because
+   * the MySQL server group_concat_max_length setting is usually limited to
+   * 1024 characters, and it's easier to work around that here than tinkering
+   * with the my.cnf file.
+   */
+
+  $result = db_query('SELECT CONCAT("(SELECT data FROM {webform_submitted_data} AS child WHERE child.sid = parent.sid AND cid = ", c.cid,") AS ", c.form_key, ", ") AS component FROM {webform_component} c WHERE c.nid = %d ORDER BY c.weight ASC, c.cid ASC', $nid);
+
+  $components = '';
+  
+  while ($row = db_fetch_array($result)) {
+    $components .= $row['component'];
+  }
+
+  $query = "CREATE OR REPLACE VIEW {%s} AS SELECT parent.sid, s.uid,"
+           .$components
+           . " FROM_UNIXTIME(s.submitted) AS submitted, s.remote_addr FROM {webform_submitted_data} AS parent JOIN {webform_submissions} s ON s.sid = parent.sid WHERE parent.nid = %d GROUP BY parent.sid ORDER BY parent.sid DESC;";
+
+  return sprintf($query, $view_name, $nid);
 }
 
 /**
