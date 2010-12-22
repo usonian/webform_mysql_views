@@ -1,11 +1,10 @@
-<?php //$Id$
+<?php // $Id$
 
 /**
  * @file
  * The Webform MySQL Views module allows you to automatically build flattened
  * MySQL views of submitted Webform module data, for convenient use by external
  * applications.
- *
  *
  * @author Andy Chase <andychase@gmail.com>
  */
@@ -129,16 +128,16 @@ function webform_mysql_views_drop($nid) {
  * Implementation of hook_help().
  */
 function webform_mysql_views_help($path) {
-  switch($path) {
+  switch ($path) {
     case 'admin/help#webform_mysql_views':
-      return '<p>' .t("This module builds flattened, read-only MySQL views of webform submission data. These views may be useful when you need to  access this data from an external application in an automated fashion without exporting, importing, or the use of a web-based API."). "</p><p>"
-      .t("To manage MySQL views for your webforms, log in as an administrator and go to the <code>Administer &gt; Content Management &gt; Web Forms</code> page and click on the <code>MySQL Views</code> tab."). '</p><p>'
-      .t("<h3 id=\"requirements\">Requirements</h3><ul><li>Your Drupal database must be using the MySQL backend.</li><li>Your MySQL server must be version 5.0 or later</li><li>The MySQL user specified in your Drupal <code>settings.php</code> file must have permission to create views.</li><li>Webform Module</li><li>Elements Module</li></ul>");
+      return '<p>'. t("This module builds flattened, read-only MySQL views of webform submission data. These views may be useful when you need to  access this data from an external application in an automated fashion without exporting, importing, or the use of a web-based API.") .'</p><p>'
+      . t("To manage MySQL views for your webforms, log in as an administrator and go to the <code>Administer &gt; Content Management &gt; Web Forms</code> page and click on the <code>MySQL Views</code> tab.") .'</p><p>'
+      . t("<h3 id=\"requirements\">Requirements</h3><ul><li>Your Drupal database must be using the MySQL backend.</li><li>Your MySQL server must be version 5.0 or later</li><li>The MySQL user specified in your Drupal <code>settings.php</code> file must have permission to create views.</li><li>Webform Module</li><li>Elements Module</li></ul>");
     case 'admin/content/webform/mysql':
-      return '<p>' .t("This page lets you add or remove MySQL views containing submission data for your Webforms."). '</p>'
-. '<p>' .t("To add a MySQL view for a Webform, check the box next to its name and submit the form"). '</p>'
-. '<p>' .t("To remove a MySQL view for a Webform, uncheck the box next to its name and submit the form."). '</p>'
-. '<p>' .t("Note: <a href=\"http://dev.mysql.com/tech-resources/articles/mysql-views.html\">MySQL Views</a> should not be confused with the <a href=\"http://drupal.org/project/views\"> Drupal Views module</a>.").'</p>';
+      return '<p>'. t("This page lets you add or remove MySQL views containing submission data for your Webforms.") .'</p>'
+.'<p>'. t("To add a MySQL view for a Webform, check the box next to its name and submit the form") .'</p>'
+.'<p>'. t("To remove a MySQL view for a Webform, uncheck the box next to its name and submit the form.") .'</p>'
+.'<p>'. t("Note: <a href=\"http://dev.mysql.com/tech-resources/articles/mysql-views.html\">MySQL Views</a> should not be confused with the <a href=\"http://drupal.org/project/views\"> Drupal Views module</a>.") .'</p>';
   }
 }
 
@@ -153,7 +152,7 @@ function webform_mysql_views_admin_form() {
 
   $meets_reqs = _webform_mysql_views_check_requirements();
   if ($meets_reqs !== TRUE) {
-    $output = '<strong>' .t("This module will not work on this site."). '</strong>';
+    $output = '<strong>'. t("This module will not work on this site.") .'</strong>';
     $output .= theme('item_list', $meets_reqs, t('Details'));
 
     return array("error" => array('#value' => $output));
@@ -294,8 +293,8 @@ function webform_mysql_views_build_query($nid, $view_name) {
   }
 
   $query = "CREATE OR REPLACE VIEW {%s} AS SELECT parent.sid, s.uid,"
-           .$components
-           . " FROM_UNIXTIME(s.submitted) AS submitted, s.remote_addr FROM {webform_submitted_data} AS parent JOIN {webform_submissions} s ON s.sid = parent.sid WHERE parent.nid = %d GROUP BY parent.sid ORDER BY parent.sid DESC;";
+           . $components
+           .' FROM_UNIXTIME(s.submitted) AS submitted, s.remote_addr FROM {webform_submitted_data} AS parent JOIN {webform_submissions} s ON s.sid = parent.sid WHERE parent.nid = %d GROUP BY parent.sid ORDER BY parent.sid DESC;';
 
   return sprintf($query, $view_name, $nid);
 }
@@ -306,16 +305,16 @@ function webform_mysql_views_build_query($nid, $view_name) {
 function webform_mysql_views_get_view_name($title, $nid) {
   //Discard non-alphanumeric chars
   $title = strtolower(str_replace(' ', '_', $title));
-  $title = 'webform_views_' .preg_replace('/[^a-z0-9_]/', '', $title);
+  $title = 'webform_views_'. preg_replace('/[^a-z0-9_]/', '', $title);
 
   /* Check whether the default view name is already being used
    * (For example duplicate node titles). Append $nid if necessary to ensure
-   * uniqueness
+   * uniqueness.  Table names not escaped as they are not a part of the Drupal DB.
    */
   $view_exists = db_result(db_query("SELECT COUNT(table_name) AS view_exists FROM information_schema.tables where table_schema = 'drupal6_rcapp_dev' AND table_name = '%s'", $title));
 
   if ($view_exists) {
-    return $title. '_' .$nid;
+    return $title .'_'. $nid;
   }
 
   return $title;
