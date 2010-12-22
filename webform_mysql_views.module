@@ -76,10 +76,8 @@ function webform_mysql_views_component_submit($form, $form_state) {
  * Implementation of hook_nodeapi().
  */
 function webform_mysql_views_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
-  /*
-   * If node is being deleted, check to see if it has a corresponding MySQL view
-   * and if so, drop it.
-   */
+  // If node is being deleted, check to see if it has a corresponding MySQL view
+  // and if so, drop it.
   if ($op == 'delete') {
     webform_mysql_views_drop($node->nid);
   }
@@ -88,6 +86,12 @@ function webform_mysql_views_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
 /**
  * Rebuild the view for the specified nid, if any. If $add_new is TRUE, will
  * build a new view even if an existing one is not found.
+ *
+ * @param $nid
+ *   The node ID of the webform whose view should be rebuilt.
+ *
+ * @param boolean $add_new
+ *   Indicates whether or not view should be added if it does not already exist.
  */
 function webform_mysql_views_rebuild($nid, $add_new = FALSE) {
   $views = variable_get('webform_mysql_views_views', array());
@@ -114,6 +118,9 @@ function webform_mysql_views_rebuild($nid, $add_new = FALSE) {
 
 /**
  * Drops the view belonging to the specified nid, if any
+ *
+ * @param $nid
+ *   The node ID of the webform whose view should be dropped.
  */
 function webform_mysql_views_drop($nid) {
   $views = variable_get('webform_mysql_views_views', array());
@@ -142,10 +149,13 @@ function webform_mysql_views_help($path) {
 }
 
 /**
- * Page callback for admin/content/webform/mysql.
+ * Form builder for the Webform MySQL Views admin form.
  *
  * Implemented as its own admin page instead of integrating with the node
  * form because of chicken-and-egg logic hassles.
+ *
+ * @see webform_mysql_views_admin_form_submit()
+ * @ingroup forms
  */
 function webform_mysql_views_admin_form() {
 
@@ -220,7 +230,9 @@ function webform_mysql_views_admin_form() {
 }
 
 /**
- * Submit handler for the admin form.
+ * Form submission handler for the admin form.
+ *
+ * @see webform_mysql_views_admin_form()
  */
 function webform_mysql_views_admin_form_submit($form, &$form_state) {
 
@@ -275,14 +287,19 @@ function webform_mysql_views_admin_form_submit($form, &$form_state) {
 /**
  * Given a webform node ID, build an SQL query that will create a flat MySQL view
  * of subnissions for that webform
+ *
+ * @param $nid
+ *   The node ID of the webform this view is being built for.
+ *
+ * @param $view_name
+ *   The name to use for this view in the MySQL database.
  */
 function webform_mysql_views_build_query($nid, $view_name) {
 
-  /* Build query with individual rows instead of GROUP_CONCAT, because
-   * the MySQL server group_concat_max_length setting is usually limited to
-   * 1024 characters, and it's easier to work around that here than tinkering
-   * with the my.cnf file.
-   */
+  // Build query with individual rows instead of GROUP_CONCAT, because
+  // the MySQL server group_concat_max_length setting is usually limited to
+  // 1024 characters, and it's easier to work around that here than tinkering
+  // with the my.cnf file.
 
   $result = db_query('SELECT CONCAT("(SELECT data FROM {webform_submitted_data} AS child WHERE child.sid = parent.sid AND cid = ", c.cid,") AS ", c.form_key, ", ") AS component FROM {webform_component} c WHERE c.nid = %d ORDER BY c.weight ASC, c.cid ASC', $nid);
 
@@ -301,16 +318,22 @@ function webform_mysql_views_build_query($nid, $view_name) {
 
 /**
  * Get a unique view name from a given string and node ID.
+ *
+ * @param $title
+ *   The string from which to build the view name.
+ *
+ * @param $nid
+ *   The node ID from which to build the view name.
  */
 function webform_mysql_views_get_view_name($title, $nid) {
   //Discard non-alphanumeric chars
   $title = strtolower(str_replace(' ', '_', $title));
   $title = 'webform_views_'. preg_replace('/[^a-z0-9_]/', '', $title);
 
-  /* Check whether the default view name is already being used
-   * (For example duplicate node titles). Append $nid if necessary to ensure
-   * uniqueness.  Table names not escaped as they are not a part of the Drupal DB.
-   */
+  // Check whether the default view name is already being used
+  // (For example duplicate node titles). Append $nid if necessary to ensure
+  // uniqueness.  Table names not escaped as they are not a part of the Drupal DB.
+
   $view_exists = db_result(db_query("SELECT COUNT(table_name) AS view_exists FROM information_schema.tables where table_schema = 'drupal6_rcapp_dev' AND table_name = '%s'", $title));
 
   if ($view_exists) {
